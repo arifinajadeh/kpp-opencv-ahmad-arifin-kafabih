@@ -1,38 +1,86 @@
+
 #include <opencv2/opencv.hpp>
 #include <iostream>
+#include <vector>
 
 int main (){
-    cv::Mat image = cv::imread("../image_n_video/photos/sample2.jpg");
-    
-    cv:: Mat hls_image;
-    cv::cvtColor(image, hls_image, cv::COLOR_BGR2HLS);
+    cv::VideoCapture cap(0);
+    cv::Mat frame;
+    cv::Mat resized_frame;  
+    while (cap.isOpened()) {
+        cap >> frame;
 
+        if (frame.empty()) {
+            std::cerr << "Error: Could not read frame from camera." << std::endl;
+            break;
+        }   
+        cv::resize(frame, resized_frame, cv::Size(640, 480));
+    if (frame.empty()) {
+        std::cerr << "Gagal membaca video!" << std::endl;
+        return -1;
+    }
 
-    cv:: Mat thresholdedImage;
+    cv::Mat hls_image;
+    cv::cvtColor(resized_frame, hls_image, cv::COLOR_BGR2HLS);
 
-    cv::inRange(image, 
-        cv::Scalar(11, 42, 61), 
-        cv::Scalar(255, 211, 255), 
-        thresholdedImage);
+    // 2. Membuat threshold berdasarkan rentang HLS
+    cv::Mat thresholdedImage;
+    cv::inRange(
+        hls_image,
+        cv::Scalar(85, 50, 100),
+        cv::Scalar(125, 200, 255),
+        thresholdedImage
+    );
 
-    cv:: Mat morphology  = thresholdedImage.clone();
+    // 3. Morphology untuk membersihkan mask
+    cv::Mat morphology = thresholdedImage.clone();
 
-    cv::erode(morphology, morphology, cv::Mat(), cv::Point(-1,-1), 2);
-    cv::dilate(morphology, morphology, cv::Mat(), cv::Point(-1,-1), 8);
-    cv::erode(morphology, morphology, cv::Mat(), cv::Point(-1,-1), 5);
-    
+    cv::erode(morphology, morphology, cv::Mat(), cv::Point(-1, -1), 2);
     std::vector<std::vector<cv::Point>> contours;
-    cv::findContours(morphology, contours, cv::RETR_EXTERNAL, cv::CHAIN_APPROX_SIMPLE);
 
-    cv::Mat result = image.clone()
+    cv::findContours(
+        morphology,
+        contours,
+        cv::RETR_EXTERNAL,
+        cv::CHAIN_APPROX_SIMPLE
+    );
 
-    for (size_t i = 0; i < contours.size() ; i++){
-        if(cv::contourArea(contours[i] > 1000)){
-            cv::Rect boundingBox = 
+    // 5. Menyiapkan gambar hasil
+    cv::Mat result = resized_frame.clone();
+
+    // 6. Membuat bounding box
+    for (size_t i = 0; i < contours.size(); i++) {
+
+        double area = cv::contourArea(contours[i]);
+
+        if (area > 1000) {
+            cv::Rect boundingBox =
+                cv::boundingRect(contours[i]);
+
+            cv::rectangle(
+                result,
+                boundingBox,
+                cv::Scalar(0, 255, 0),
+                2
+            );
+
+            std::cout << "Objek " << i + 1
+                      << " | Luas: " << area
+                      << " | X: " << boundingBox.x
+                      << " | Y: " << boundingBox.y
+                      << " | Lebar: " << boundingBox.width
+                      << " | Tinggi: " << boundingBox.height
+                      << std::endl;
         }
     }
-    cv::imshow("Gambar", image);
-    cv::imshow("Gambar HLS", hls_image);    
+
+    // 7. Menampilkan hasil
+    cv::imshow("Gambar Asli", resized_frame);
+    cv::imshow("Gambar HLS", hls_image);
+    cv::imshow("Threshold", thresholdedImage);
+    cv::imshow("Morphology", morphology);
+    cv::imshow("Bounding Box", result);
+
     cv::waitKey(0);
+
     return 0;
-}
