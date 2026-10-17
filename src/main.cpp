@@ -125,8 +125,8 @@ int main() {
     fs.release();
 
     if (K.empty() || K.rows != 3 || K.cols != 3) {
-        cerr << "Error: Matriks K tidak valid!" << endl;
-        return -1;
+            cerr << "Error: Matriks K tidak valid!" << endl;
+            return -1;
     }
 
     if (K.type() != CV_64F) {
