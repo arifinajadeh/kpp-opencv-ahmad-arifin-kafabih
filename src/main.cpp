@@ -41,13 +41,9 @@ void deteksiWarna(
         if (cv::contourArea(contours[i]) <= 1000) {
             continue;
         }
-
         cv::Rect boundingBox = cv::boundingRect(contours[i]);
-
         double wpixel = boundingBox.width;
-
         cv::Moments m = cv::moments(contours[i]);
-
         if (m.m00 == 0 || wpixel <= 0) {
             continue;
         }
