@@ -1,115 +1,94 @@
+
 #include <opencv2/opencv.hpp>
 #include <iostream>
-using namespace std;
-int main (){
-    cv::VideoCapture cap(0);
+#include <vector>
+
+int main() {
+    cv::VideoCapture cap(2);
+
+    if (!cap.isOpened()) {
+        std::cerr << "Gagal membuka kamera!" << std::endl;
+        return -1;
+    }
+
     cv::Mat frame;
     cv::Mat resized_frame;
-    cv::Mat hsl_video;
-    cv::Mat thresholdedImage;
-    cv::Mat morphImage;
-    while (cap.isOpened()) {
+
+    while (true) {
         cap >> frame;
 
         if (frame.empty()) {
-            std::cerr << "Error: Could not read frame from camera." << std::endl;
+            std::cerr << "Gagal membaca video!" << std::endl;
             break;
-        }   
+        }
 
-        cv::cvtColor(frame, hsl_video, cv::COLOR_BGR2HLS);
-        cv::Mat blue, red;
+        cv::resize(frame, resized_frame, cv::Size(640, 480));
 
-        cv::inRange(hsl_video,
-        cv::Scalar (85, 50, 50),
-        cv::Scalar (130, 255, 255),
-        thresholdedImage);
+        cv::Mat hls_image;
+        cv::cvtColor(resized_frame, hls_image, cv::COLOR_BGR2HLS);
 
+        cv::Mat thresholdedImage;
+        cv::inRange(
+            hls_image,
+            cv::Scalar(75, 70, 60),
+            cv::Scalar(100, 255, 255),
+            thresholdedImage
+        );
 
+        cv::Mat morphology = thresholdedImage.clone();
 
+        cv::erode(
+            morphology, morphology, cv::Mat(),
+            cv::Point(-1, -1), 5
+        );
 
-        cv::erode(thresholdedImage, morphImage, cv::Mat(), cv::Point(-1, -1), 8);
-        cv::dilate(morphImage, morphImage, cv::Mat(), cv::Point(-1, -1), 5);
-        cv::erode(morphImage, morphImage, cv::Mat(), cv::Point(-1, -1), 10);
+        cv::dilate(
+            morphology, morphology, cv::Mat(),
+            cv::Point(-1, -1), 3
+        );
 
-        vector<vector<cv::Point>> contours;
-        cv::findContours(morphImage, contours, cv::RETR_EXTERNAL, cv::CHAIN_APPROX_SIMPLE);
-        
-        cv::Mat frame_result = frame.clone();
-        for (size_t i = 0; i < contours.size(); i++){
-            if(cv::contourArea(contours[i]) > 1000){
-                cv::Rect boundingBox = cv::boundingRect(contours[i]);
-                cv::rectangle(frame_result, boundingBox, cv::Scalar(0, 255, 0), 2);
-                double wpixel = boundingBox.width;
+        cv::erode(
+            morphology, morphology, cv::Mat(),
+            cv::Point(-1, -1), 1
+        );
 
-                cv::Mat K;
-                cv::FileStorage fs ("../yaml/kalibrasi.yaml", cv::FileStorage::READ);
-                fs["K"] >> K;
-                fs.release();
+        std::vector<std::vector<cv::Point>> contours;
 
-                cv::Moments m = cv::moments(morphImage, true);
-                if (m.m00 == 0 || wpixel == 0) {
-                        continue;
-                    }
-                double u = m.m10 / m.m00;
-                double v = m.m01 / m.m00;
+        cv::findContours(
+            morphology,
+            contours,
+            cv::RETR_EXTERNAL,
+            cv::CHAIN_APPROX_SIMPLE
+        );
 
+        cv::Mat result = resized_frame.clone();
 
+        for (size_t i = 0; i < contours.size(); i++) {
+            double area = cv::contourArea(contours[i]);
 
-                double fx = K.at<double>(0, 0);
-                double fy = K.at<double>(1, 1);
-                double cx = K.at<double>(0, 2);
-                double cy = K.at<double>(1, 2);
+            if (area > 3000) {
+                cv::Rect boundingBox =
+                    cv::boundingRect(contours[i]);
 
-                double Z = (fx * 700.0) / wpixel;
-                double X = ((u - cx) * Z) / fx;
-                double Y = ((v - cy) * Z) / fy;
-
-                cv::circle(
-                    frame_result,
-                    cv::Point(
-                        static_cast<int>(u),
-                        static_cast<int>(v)
-                    ),
-                    5,
-                    cv::Scalar(0, 0, 255),
-                    -1
-                );
-
-                string koordinat = cv::format(
-                    "X: %.1f Y: %.1f Z: %.1f mm",
-                    X, Y, Z
-                );
-
-                cv::putText(
-                    frame_result,
-                    koordinat,
-                    cv::Point(
-                        boundingBox.x,
-                        max(20, boundingBox.y - 10)
-                    ),
-                    cv::FONT_HERSHEY_SIMPLEX,
-                    0.5,
+                cv::rectangle(
+                    result,
+                    boundingBox,
                     cv::Scalar(0, 255, 0),
                     2
                 );
-                cout << koordinat << endl;
             }
         }
-        cv::resize(
-            frame_result,
-            resized_frame,
-            cv::Size(400, 480)
-        );
 
-        cv::imshow("Video Resize", resized_frame);
+        cv::imshow("Gambar Asli", resized_frame);
+        cv::imshow("Gambar HLS", hls_image);
         cv::imshow("Threshold", thresholdedImage);
-        cv::imshow("Morphology", morphImage);
-        cv::imshow("main", frame_result);
+        cv::imshow("Morphology", morphology);
+        cv::imshow("Bounding Box", result);
 
         if (cv::waitKey(1) == 'q') {
             break;
-            }
         }
+    }
 
     cap.release();
     cv::destroyAllWindows();

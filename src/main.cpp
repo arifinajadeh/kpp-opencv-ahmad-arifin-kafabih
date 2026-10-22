@@ -21,13 +21,19 @@ void deteksiWarna(
     
     cv::erode(
         mask, morphImage, cv::Mat(),
-        cv::Point(-1, -1), 1
+        cv::Point(-1, -1), 5
     );
 
     cv::dilate(
         morphImage, morphImage, cv::Mat(),
-        cv::Point(-1, -1), 2
+        cv::Point(-1, -1), 3
     );
+
+    cv::erode(
+    mask, morphImage, cv::Mat(),
+    cv::Point(-1, -1), 1
+    );
+
 
     vector<vector<cv::Point>> contours;
     cv::findContours(
@@ -44,9 +50,6 @@ void deteksiWarna(
         cv::Rect boundingBox = cv::boundingRect(contours[i]);
         double wpixel = boundingBox.width;
         cv::Moments m = cv::moments(contours[i]);
-        if (m.m00 == 0 || wpixel <= 0) {
-            continue;
-        }
 
         double u = m.m10 / m.m00;
         double v = m.m01 / m.m00;
@@ -91,7 +94,7 @@ void deteksiWarna(
             2
         );
 
-        cout << label << endl;
+        // cout << label << endl;
     }
 }
 
@@ -135,7 +138,7 @@ int main() {
     double cy = K.at<double>(1, 2);
 
     cv::Mat frame, hsl_video;
-    cv::Mat blueMask, redMask;
+    cv::Mat blueMask, redMask, yellowMask, greenMask;
     cv::Mat redMask1, redMask2;
     cv::Mat frame_result;
 
@@ -156,31 +159,43 @@ int main() {
 
         // Mask biru
         cv::inRange(
-            hsl_video,
-            cv::Scalar(85, 50, 50),
+            hsl_video,  
+            cv::Scalar(85, 50, 100),
             cv::Scalar(130, 255, 255),
             blueMask
         );
-
+         //mask kuning 
+        cv::inRange(hsl_video, 
+            cv::Scalar(20, 100, 100), 
+            cv::Scalar(50, 230, 255), 
+        yellowMask);
+        
+        //mask hijau
         cv::inRange(
             hsl_video,
-            cv::Scalar(0, 50, 50),
-            cv::Scalar(10, 255, 255),
-            redMask1
+            cv::Scalar(75, 70, 60),
+            cv::Scalar(100, 255, 255),
+            greenMask
         );
+        // cv::inRange(
+        //     hsl_video,
+        //     cv::Scalar(0, 50, 50),
+        //     cv::Scalar(10, 255, 255),
+        //     redMask1
+        // );
 
-        cv::inRange(
-            hsl_video,
-            cv::Scalar(170, 50, 50),
-            cv::Scalar(180, 255, 255),
-            redMask2
-        );
+        // cv::inRange(
+        //     hsl_video,
+        //     cv::Scalar(170, 50, 50),
+        //     cv::Scalar(180, 255, 255),
+        //     redMask2
+        // );
 
-        cv::bitwise_or(
-            redMask1,
-            redMask2,
-            redMask
-        );
+        // cv::bitwise_or(
+        //     redMask1,
+        //     redMask2,
+        //     redMask
+        // );
         frame_result = frame.clone();
 
         deteksiWarna(
@@ -190,20 +205,25 @@ int main() {
         );
 
         deteksiWarna(
-            redMask, frame_result, "MERAH",
-            cv::Scalar(0, 0, 255),
-            fx, fy, cx, cy, 700.0
+            yellowMask, frame_result, "KUNING",
+            cv::Scalar(0, 255, 255),
+            fx, fy, cx, cy, 750.0
         );
 
-        cv::imshow("Deteksi Dua Warna", frame_result);
+         deteksiWarna(
+            greenMask, frame_result, "HIJAU",
+            cv::Scalar(0, 255, 0),
+            fx, fy, cx, cy, 550.0
+        );
+        cv::imshow("Result", frame_result);
         cv::imshow("Mask Biru", blueMask);
-        cv::imshow("Mask Merah", redMask);
+        cv::imshow("Mask yellow", yellowMask);
+        cv::imshow("Mask Green", greenMask);
 
-        if (cv::waitKey(1) == 'q') {
+        if (cv::waitKey(1) == 'q') {    
             break;
         }
-    }
-
+    }       
     cap.release();
     cv::destroyAllWindows();
 

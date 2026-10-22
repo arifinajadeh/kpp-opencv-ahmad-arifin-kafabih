@@ -24,26 +24,34 @@ int main() {
 
         cv::resize(frame, resized_frame, cv::Size(640, 480));
 
-        // 1. Konversi BGR ke HLS
         cv::Mat hls_image;
         cv::cvtColor(resized_frame, hls_image, cv::COLOR_BGR2HLS);
 
-        // 2. Threshold warna biru
         cv::Mat thresholdedImage;
         cv::inRange(
             hls_image,
-            cv::Scalar(85, 50, 100),
+            cv::Scalar(85, 25, 50),
             cv::Scalar(125, 200, 255),
             thresholdedImage
         );
 
-        // 3. Membersihkan mask
         cv::Mat morphology = thresholdedImage.clone();
 
-        cv::erode(morphology, morphology, cv::Mat(),cv::Point(-1, -1), 2);
-        cv::dilate(morphology, morphology, cv::Mat(),cv::Point(-1, -1), 3);
-        // cv::erode(morphology, morphology, cv::Mat(),cv::Point(-1, -1), 1);
-        // 4. Mencari kontur
+        cv::erode(
+            morphology, morphology, cv::Mat(),
+            cv::Point(-1, -1), 5
+        );
+
+        cv::dilate(
+            morphology, morphology, cv::Mat(),
+            cv::Point(-1, -1), 3
+        );
+
+        cv::erode(
+            morphology, morphology, cv::Mat(),
+            cv::Point(-1, -1), 1
+        );
+
         std::vector<std::vector<cv::Point>> contours;
 
         cv::findContours(
@@ -53,14 +61,12 @@ int main() {
             cv::CHAIN_APPROX_SIMPLE
         );
 
-        // 5. Menyiapkan gambar hasil
         cv::Mat result = resized_frame.clone();
 
-        // 6. Membuat bounding box
         for (size_t i = 0; i < contours.size(); i++) {
             double area = cv::contourArea(contours[i]);
 
-            if (area > 1000) {
+            if (area > 3000) {
                 cv::Rect boundingBox =
                     cv::boundingRect(contours[i]);
 
@@ -73,14 +79,12 @@ int main() {
             }
         }
 
-        // 7. Menampilkan hasil setiap frame
         cv::imshow("Gambar Asli", resized_frame);
         cv::imshow("Gambar HLS", hls_image);
         cv::imshow("Threshold", thresholdedImage);
         cv::imshow("Morphology", morphology);
         cv::imshow("Bounding Box", result);
 
-        // Tekan ESC untuk keluar
         if (cv::waitKey(1) == 'q') {
             break;
         }

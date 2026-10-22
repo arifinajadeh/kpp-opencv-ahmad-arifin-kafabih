@@ -31,7 +31,6 @@ int main() {
         return -1;
     }
 
-    // BARU: variabel untuk menyimpan hasil kalibrasi
     cv::Mat K, distCoeffs;
     vector<cv::Mat> rvecs, tvecs;
     bool calibrated = false;
