@@ -108,17 +108,17 @@ int main() {
         // );
         frame_result = frame.clone();
 
-        deteksiWarna(
+        tracker.deteksiWarna(
             blueMask, frame_result, "BIRU",
             cv::Scalar(255, 0, 0), 700.0
         );
 
-        deteksiWarna(
+        tracker.deteksiWarna(
             yellowMask, frame_result, "KUNING",
             cv::Scalar(0, 255, 255), 750.0
         );
 
-         deteksiWarna(
+        tracker.deteksiWarna(
             greenMask, frame_result, "HIJAU",
             cv::Scalar(0, 255, 0), 550.0
         );

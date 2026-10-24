@@ -13,14 +13,12 @@ class Tracker {
         double fx, fy, cx, cy;
 
     public:
-        Tracker(fx, fy, cx, cy){
+        Tracker(double fx, double fy, double cx, double cy){
             this->fx = fx;
             this->fy = fy;
             this->cx = cx;
             this->cy = cy;
-        }
-
-        vector<vector<cv::Point>> contours;    
+        }  
         
         void deteksiWarna(
         const cv::Mat& mask,
@@ -92,3 +90,5 @@ class Tracker {
         }
     }
 };
+
+#endif
