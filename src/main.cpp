@@ -1,10 +1,10 @@
 
 #include <opencv2/opencv.hpp>
-#include <tracker.hpp>
+#include "tracker.hpp"
 #include <iostream>
-#include <vector>
-#include <string>
-#include <algorithm>
+// #include <vector>
+// #include <string>
+// #include <algorithm>
 
 
 using namespace std;
@@ -16,7 +16,6 @@ int main() {
         return -1;
     }
 
-    // Membaca matriks kalibrasi satu kali
     cv::Mat K;  
 
     cv::FileStorage fs(
@@ -46,6 +45,7 @@ int main() {
     double fy = K.at<double>(1, 1);
     double cx = K.at<double>(0, 2);
     double cy = K.at<double>(1, 2);
+    Tracker tracker(fx, fy, cx, cy);
 
     cv::Mat frame, hsl_video;
     cv::Mat blueMask, redMask, yellowMask, greenMask;
@@ -110,21 +110,19 @@ int main() {
 
         deteksiWarna(
             blueMask, frame_result, "BIRU",
-            cv::Scalar(255, 0, 0),
-            fx, fy, cx, cy, 700.0
+            cv::Scalar(255, 0, 0), 700.0
         );
 
         deteksiWarna(
             yellowMask, frame_result, "KUNING",
-            cv::Scalar(0, 255, 255),
-            fx, fy, cx, cy, 750.0
+            cv::Scalar(0, 255, 255), 750.0
         );
 
          deteksiWarna(
             greenMask, frame_result, "HIJAU",
-            cv::Scalar(0, 255, 0),
-            fx, fy, cx, cy, 550.0
+            cv::Scalar(0, 255, 0), 550.0
         );
+        
         cv::imshow("Result", frame_result);
         cv::imshow("Mask Biru", blueMask);
         cv::imshow("Mask yellow", yellowMask);
