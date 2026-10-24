@@ -40,8 +40,16 @@ int main() {
         // 3. Membersihkan mask
         cv::Mat morphology = thresholdedImage.clone();
 
-        cv::erode(morphology, morphology, cv::Mat(),cv::Point(-1, -1), 2);
-        cv::dilate(morphology, morphology, cv::Mat(),cv::Point(-1, -1), 2);
+        cv::erode(
+            morphology, morphology, cv::Mat(),
+            cv::Point(-1, -1), 1
+        );
+            
+        cv::dilate(
+            morphology, morphology, cv::Mat(),
+            cv::Point(-1, -1), 5
+         );
+
         // cv::erode(morphology, morphology, cv::Mat(),cv::Point(-1, -1), 1);
         // 4. Mencari kontur
         std::vector<std::vector<cv::Point>> contours;

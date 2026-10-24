@@ -39,18 +39,13 @@ int main() {
 
         cv::erode(
             morphology, morphology, cv::Mat(),
-            cv::Point(-1, -1), 5
-        );
-
-        cv::dilate(
-            morphology, morphology, cv::Mat(),
-            cv::Point(-1, -1), 3
-        );
-
-        cv::erode(
-            morphology, morphology, cv::Mat(),
             cv::Point(-1, -1), 1
         );
+            
+        cv::dilate(
+            morphology, morphology, cv::Mat(),
+            cv::Point(-1, -1), 5
+         );
 
         std::vector<std::vector<cv::Point>> contours;
 

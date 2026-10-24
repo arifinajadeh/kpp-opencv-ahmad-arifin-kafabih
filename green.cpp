@@ -20,7 +20,7 @@ int main() {
         if (frame.empty()) {
             std::cerr << "Gagal membaca video!" << std::endl;
             break;
-        }
+        }   
 
         cv::resize(frame, resized_frame, cv::Size(640, 480));
 
@@ -30,7 +30,7 @@ int main() {
         cv::Mat thresholdedImage;
         cv::inRange(
             hls_image,
-            cv::Scalar(75, 70, 60),
+            cv::Scalar(75, 35, 60),
             cv::Scalar(100, 255, 255),
             thresholdedImage
         );
@@ -39,24 +39,23 @@ int main() {
 
         cv::erode(
             morphology, morphology, cv::Mat(),
-            cv::Point(-1, -1), 5
-        );
-
-        cv::dilate(
-            morphology, morphology, cv::Mat(),
-            cv::Point(-1, -1), 3
-        );
-
-        cv::erode(
-            morphology, morphology, cv::Mat(),
             cv::Point(-1, -1), 1
         );
+            
+        cv::dilate(
+            morphology, morphology, cv::Mat(),
+            cv::Point(-1, -1), 5
+         );
+
+        // cv::erode(
+        //     morphology, morphology, cv::Mat(),
+        //     cv::Point(-1, -1), 2
+        // );
 
         std::vector<std::vector<cv::Point>> contours;
-
         cv::findContours(
             morphology,
-            contours,
+            contours,   
             cv::RETR_EXTERNAL,
             cv::CHAIN_APPROX_SIMPLE
         );
@@ -76,7 +75,7 @@ int main() {
                     cv::Scalar(0, 255, 0),
                     2
                 );
-            }
+            }       
         }
 
         cv::imshow("Gambar Asli", resized_frame);
